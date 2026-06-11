@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <h1>Linguee &rarr; Anki</h1>
+      <div class="status-indicator" id="status-indicator">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-text" id="status-text">Checking...</span>
+      </div>
+    </header>
+
+    <div id="profile-warning" class="warning hidden">
+      <div class="warning-icon">&#9888;</div>
+      <p id="profile-warning-text"></p>
+      <button id="btn-check-again" class="btn btn-primary">Check Again</button>
+    </div>
+
+    <div id="main-content" class="hidden">
+      <section class="section">
+        <h2>Deck</h2>
+        <select id="deck-select">
+          <option value="">Loading decks...</option>
+        </select>
+        <div class="deck-actions">
+          <button id="btn-show-create" class="btn btn-small">+ New Deck</button>
+        </div>
+        <div id="create-deck-form" class="hidden">
+          <input type="text" id="new-deck-name" placeholder="Deck name">
+          <div class="form-actions">
+            <button id="btn-confirm-create" class="btn btn-primary btn-small">Create</button>
+            <button id="btn-cancel-create" class="btn btn-small">Cancel</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section stats">
+        <h2>Stats</h2>
+        <div class="stat-row">
+          <span class="stat-label">Added this session</span>
+          <span class="stat-value" id="cards-added">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Pending queue</span>
+          <span class="stat-value" id="queue-count">0</span>
+        </div>
+      </section>
+    </div>
+
+    <section class="section help">
+      <h2>Setup</h2>
+      <ol>
+        <li>Open <strong>Anki Desktop</strong></li>
+        <li>Install <strong>AnkiConnect</strong> (code: <code>2055492159</code>)</li>
+        <li>Create <strong>"testing"</strong> profile: File &rarr; Switch Profile &rarr; Add</li>
+        <li>Switch to <strong>"testing"</strong> profile</li>
+      </ol>
+    </section>
+
+    <div class="actions">
+      <button id="btn-process-queue" class="btn btn-secondary">Process Queue</button>
+      <button id="btn-check-connection" class="btn btn-secondary">Check Connection</button>
+    </div>
+
+    <footer class="popup-footer">
+      v1.0.0 &middot; <a href="https://ankiweb.net/shared/info/2055492159" target="_blank">AnkiConnect</a>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

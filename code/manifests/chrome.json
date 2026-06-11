@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Linguee → Anki (DEV)",
+  "name": "Linguee \u2192 Anki",
   "version": "1.0.0",
   "description": "Extract German-English vocabulary from Linguee and add flashcards to Anki via AnkiConnect.",
   "permissions": [
@@ -27,7 +27,7 @@
   ],
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Linguee → Anki (DEV)"
+    "default_title": "Linguee \u2192 Anki"
   },
   "icons": {
     "16": "icons/icon-16.png",

@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Linguee → Anki (DEV)",
+  "name": "Linguee \u2192 Anki",
   "version": "1.0.0",
   "description": "Extract German-English vocabulary from Linguee and add flashcards to Anki via AnkiConnect.",
   "permissions": [
@@ -12,7 +12,7 @@
     "https://www.linguee.com/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"]
   },
   "content_scripts": [
     {
@@ -27,11 +27,17 @@
   ],
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Linguee → Anki (DEV)"
+    "default_title": "Linguee \u2192 Anki"
   },
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "linguee-anki-bot@opencode.local",
+      "strict_min_version": "121.0"
+    }
   }
 }

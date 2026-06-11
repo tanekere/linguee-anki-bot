@@ -1,0 +1,70 @@
+.linguee-anki-btn-container {
+  display: inline-block;
+  margin: 2px 0 6px 0;
+}
+
+.linguee-anki-btn {
+  padding: 4px 14px;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s, box-shadow 0.1s;
+  z-index: 9999;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.linguee-anki-btn.idle {
+  background: #457b9d;
+}
+
+.linguee-anki-btn.idle:hover {
+  background: #1d3557;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+
+.linguee-anki-btn.idle:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+
+.linguee-anki-btn.adding {
+  background: #f39c12;
+  cursor: wait;
+}
+
+.linguee-anki-btn.added {
+  background: #27ae60;
+  cursor: default;
+}
+
+.linguee-anki-btn.duplicate {
+  background: #e67e22;
+  cursor: default;
+}
+
+.linguee-anki-btn.error {
+  background: #e74c3c;
+  cursor: pointer;
+}
+
+.linguee-anki-btn.queued {
+  background: #8e44ad;
+  cursor: default;
+}
+
+.linguee-anki-btn.disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.linguee-anki-btn.disabled:hover {
+  background: #95a5a6;
+  transform: none;
+}
