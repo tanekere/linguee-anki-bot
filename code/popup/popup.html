@@ -14,20 +14,21 @@
       </div>
     </header>
 
-    <div id="profile-warning" class="warning hidden">
-      <div class="warning-icon">&#9888;</div>
-      <p id="profile-warning-text"></p>
-      <button id="btn-check-again" class="btn btn-primary">Check Again</button>
-    </div>
-
     <div id="main-content" class="hidden">
       <section class="section">
+        <h2>Profile</h2>
+        <select id="profile-select" disabled>
+          <option value="">Loading profiles...</option>
+        </select>
+      </section>
+
+      <section class="section" id="deck-section">
         <h2>Deck</h2>
-        <select id="deck-select">
-          <option value="">Loading decks...</option>
+        <select id="deck-select" disabled>
+          <option value="">Select profile first</option>
         </select>
         <div class="deck-actions">
-          <button id="btn-show-create" class="btn btn-small">+ New Deck</button>
+          <button id="btn-show-create" class="btn btn-small" disabled>Create Deck</button>
         </div>
         <div id="create-deck-form" class="hidden">
           <input type="text" id="new-deck-name" placeholder="Deck name">
@@ -56,14 +57,13 @@
       <ol>
         <li>Open <strong>Anki Desktop</strong></li>
         <li>Install <strong>AnkiConnect</strong> (code: <code>2055492159</code>)</li>
-        <li>Create <strong>"testing"</strong> profile: File &rarr; Switch Profile &rarr; Add</li>
-        <li>Switch to <strong>"testing"</strong> profile</li>
+        <li>Select your <strong>profile</strong> and <strong>deck</strong> above</li>
       </ol>
     </section>
 
     <div class="actions">
       <button id="btn-process-queue" class="btn btn-secondary">Process Queue</button>
-      <button id="btn-check-connection" class="btn btn-secondary">Check Connection</button>
+      <button id="btn-check-connection" class="btn btn-secondary">Refresh</button>
     </div>
 
     <footer class="popup-footer">

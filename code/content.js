@@ -211,14 +211,14 @@ function updateButtonStates() {
       btn.className = 'linguee-anki-btn disabled';
       btn.textContent = 'No Anki';
       btn.title = 'Anki is not connected. Open Anki Desktop with AnkiConnect.';
-    } else if (ankiStatus.profile && ankiStatus.profile !== 'testing') {
+    } else if (!ankiStatus.deck) {
       btn.className = 'linguee-anki-btn disabled';
-      btn.textContent = 'Wrong Profile';
-      btn.title = `Anki profile "${ankiStatus.profile}" is active. Switch to "testing".`;
+      btn.textContent = 'Select deck';
+      btn.title = 'No deck selected. Open the extension popup to select a deck.';
     } else {
       btn.className = 'linguee-anki-btn idle';
       btn.textContent = '+ Add to Anki';
-      btn.title = `Add to deck: ${ankiStatus.deck || 'Not set'}`;
+      btn.title = `Add to deck: ${ankiStatus.deck}`;
     }
   });
 }
@@ -269,7 +269,7 @@ document.addEventListener('click', async (e) => {
       btn.textContent = 'Exists';
       btn.title = `"${entry.word}" already exists in deck`;
       showToast(`"${entry.word}" already exists in deck`, 'warning');
-    } else if (response.error === 'wrong_profile' || response.error === 'profile_missing') {
+    } else if (response.error === 'no_deck') {
       btn.classList.remove('adding');
       btn.classList.add('error');
       btn.textContent = 'Error';
@@ -332,6 +332,12 @@ function injectForAll(exactDivs, entryList) {
     });
   });
 }
+
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.action === 'DECK_CHANGED') {
+    checkAnkiStatus();
+  }
+});
 
 function init() {
   entries = extractWordEntries();

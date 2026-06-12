@@ -5,7 +5,8 @@
   "description": "Extract German-English vocabulary from Linguee and add flashcards to Anki via AnkiConnect.",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "tabs"
   ],
   "host_permissions": [
     "http://localhost:8765/*",

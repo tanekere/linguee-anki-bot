@@ -1,5 +1,4 @@
 const ANKI_URL = 'http://localhost:8765';
-const ALLOWED_PROFILE = 'testing';
 const NOTE_TYPE_NAME = 'Linguee German Vocabulary';
 
 async function ankiInvoke(action, params = {}) {
@@ -24,44 +23,20 @@ async function checkAnkiConnect() {
   }
 }
 
-async function ensureActiveProfileIsTesting() {
+async function getActiveProfile() {
   try {
-    await ankiInvoke('version');
-    const activeProfile = await ankiInvoke('getActiveProfile');
-    if (activeProfile === ALLOWED_PROFILE) {
-      return { ok: true };
-    }
-    const profiles = await ankiInvoke('getProfiles');
-    if (!profiles.includes(ALLOWED_PROFILE)) {
-      return {
-        ok: false,
-        error: 'profile_missing',
-        activeProfile,
-        message: `The "${ALLOWED_PROFILE}" profile does not exist in Anki. Please create it: File → Switch Profile → Add Profile → name it "${ALLOWED_PROFILE}".`
-      };
-    }
-    return {
-      ok: false,
-      error: 'wrong_profile',
-      activeProfile,
-      message: `Anki is using profile "${activeProfile}", not "${ALLOWED_PROFILE}". Please switch: File → Switch Profile → select "${ALLOWED_PROFILE}".`
-    };
-  } catch (e) {
-    return {
-      ok: false,
-      error: 'anki_unreachable',
-      activeProfile: null,
-      message: 'Anki is not running or AnkiConnect is not installed. Please open Anki Desktop with AnkiConnect add-on (code: 2055492159).'
-    };
+    return await ankiInvoke('getActiveProfile');
+  } catch {
+    return null;
   }
 }
 
-async function safeAnkiWrite(operationFn) {
-  const profileCheck = await ensureActiveProfileIsTesting();
-  if (!profileCheck.ok) {
-    return { success: false, error: profileCheck.error, message: profileCheck.message };
+async function getProfilesList() {
+  try {
+    return await ankiInvoke('getProfiles');
+  } catch {
+    return [];
   }
-  return await operationFn();
 }
 
 function escapeHTML(str) {
@@ -381,9 +356,9 @@ async function queueForLater(entry, deckName) {
 }
 
 async function processOfflineQueue() {
-  const profileCheck = await ensureActiveProfileIsTesting();
-  if (!profileCheck.ok) {
-    return { processed: 0, remaining: -1, error: profileCheck.message };
+  const connected = await checkAnkiConnect();
+  if (!connected) {
+    return { processed: 0, remaining: -1, error: 'Anki is not running or AnkiConnect is not installed.' };
   }
 
   const { offlineQueue = [] } = await chrome.storage.local.get('offlineQueue');
@@ -413,8 +388,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.action) {
       case 'ADD_TO_ANKI': {
         const { entry } = message;
-        const { selectedDeck = `${ALLOWED_PROFILE}--German::Vocabulary` } =
-          await chrome.storage.local.get('selectedDeck');
+        const { selectedDeck } = await chrome.storage.local.get('selectedDeck');
+
+        if (!selectedDeck) {
+          sendResponse({ success: false, error: 'no_deck', message: 'No deck selected. Select a deck first.' });
+          return;
+        }
 
         try {
           const connected = await checkAnkiConnect();
@@ -424,17 +403,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return;
           }
 
-          const result = await safeAnkiWrite(
-            () => addEntryToAnki(entry, selectedDeck)
-          );
+          const result = await addEntryToAnki(entry, selectedDeck);
 
           if (result.success) {
             const { cardsAddedCount = 0 } = await chrome.storage.local.get('cardsAddedCount');
             await chrome.storage.local.set({ cardsAddedCount: cardsAddedCount + 1 });
             sendResponse(result);
-          } else if (result.error === 'anki_unreachable') {
-            await queueForLater(entry, selectedDeck);
-            sendResponse({ success: false, queued: true });
           } else {
             sendResponse(result);
           }
@@ -448,16 +422,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       case 'CHECK_ANKI_STATUS': {
         const connected = await checkAnkiConnect();
         if (!connected) {
-          sendResponse({ connected: false, profile: null });
+          sendResponse({ connected: false, profile: null, deck: null });
           return;
         }
         try {
           const activeProfile = await ankiInvoke('getActiveProfile');
-          const { selectedDeck = `${ALLOWED_PROFILE}--German::Vocabulary` } =
-            await chrome.storage.local.get('selectedDeck');
-          sendResponse({ connected: true, profile: activeProfile, deck: selectedDeck });
+          const { selectedDeck } = await chrome.storage.local.get('selectedDeck');
+          sendResponse({ connected: true, profile: activeProfile, deck: selectedDeck || null });
         } catch {
-          sendResponse({ connected: false, profile: null });
+          sendResponse({ connected: false, profile: null, deck: null });
         }
         break;
       }
@@ -465,45 +438,89 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       case 'GET_STATUS': {
         const connected = await checkAnkiConnect();
         if (!connected) {
-          sendResponse({ connected: false, profile: null });
+          sendResponse({ connected: false, profile: null, profiles: [], deck: null });
           return;
         }
         try {
           const activeProfile = await ankiInvoke('getActiveProfile');
-          sendResponse({ connected: true, profile: activeProfile });
+          const profiles = await ankiInvoke('getProfiles');
+          const { selectedDeck } = await chrome.storage.local.get('selectedDeck');
+          sendResponse({ connected: true, profile: activeProfile, profiles, deck: selectedDeck || null });
         } catch {
-          sendResponse({ connected: false, profile: null });
+          sendResponse({ connected: false, profile: null, profiles: [], deck: null });
         }
         break;
       }
 
       case 'GET_DECKS': {
-        const profileCheck = await ensureActiveProfileIsTesting();
-        if (!profileCheck.ok) {
+        const connected = await checkAnkiConnect();
+        if (!connected) {
           sendResponse({ decks: [] });
           return;
         }
-        const decks = await getDecks();
-        sendResponse({ decks });
+        try {
+          const decks = await getDecks();
+          sendResponse({ decks });
+        } catch {
+          sendResponse({ decks: [] });
+        }
         break;
       }
 
       case 'SET_DECK': {
         await chrome.storage.local.set({ selectedDeck: message.deckName });
+        chrome.tabs.query({ url: 'https://www.linguee.com/*' }, (tabs) => {
+          for (const tab of tabs) {
+            chrome.tabs.sendMessage(tab.id, { action: 'DECK_CHANGED' }).catch(() => {});
+          }
+        });
         sendResponse({ success: true });
         break;
       }
 
+      case 'GET_PROFILES': {
+        const connected = await checkAnkiConnect();
+        if (!connected) {
+          sendResponse({ connected: false, profiles: [], activeProfile: null });
+          return;
+        }
+        try {
+          const profiles = await ankiInvoke('getProfiles');
+          const activeProfile = await ankiInvoke('getActiveProfile');
+          sendResponse({ connected: true, profiles, activeProfile });
+        } catch {
+          sendResponse({ connected: false, profiles: [], activeProfile: null });
+        }
+        break;
+      }
+
+      case 'LOAD_PROFILE': {
+        try {
+          await ankiInvoke('loadProfile', { name: message.name });
+          sendResponse({ success: true });
+        } catch (e) {
+          sendResponse({ success: false, error: e.message });
+        }
+        break;
+      }
+
       case 'CREATE_DECK': {
-        const result = await safeAnkiWrite(async () => {
+        const connected = await checkAnkiConnect();
+        if (!connected) {
+          sendResponse({ success: false, error: 'anki_unreachable', message: 'Anki is not running or AnkiConnect is not installed.' });
+          break;
+        }
+        try {
           const decks = await getDecks();
           if (decks.includes(message.deckName)) {
-            return { success: false, error: 'duplicate', message: 'Deck already exists' };
+            sendResponse({ success: false, error: 'duplicate', message: 'Deck already exists' });
+          } else {
+            await ankiInvoke('createDeck', { deck: message.deckName });
+            sendResponse({ success: true });
           }
-          await ankiInvoke('createDeck', { deck: message.deckName });
-          return { success: true };
-        });
-        sendResponse(result);
+        } catch (e) {
+          sendResponse({ success: false, error: 'anki_error', message: e.message });
+        }
         break;
       }
 
