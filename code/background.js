@@ -158,7 +158,7 @@ const FRONT_TEMPLATE = `<div class="word">{{Word}}</div>
   {{#Gender}}<span class="gender gender-{{Gender}}">{{Gender}}</span>{{/Gender}}
 </div>
 {{#FormsHTML}}
-<div class="word-forms">{{{FormsHTML}}}</div>
+<div class="word-forms">{{FormsHTML}}</div>
 {{/FormsHTML}}`;
 
 const BACK_TEMPLATE = `{{FrontSide}}
@@ -166,14 +166,14 @@ const BACK_TEMPLATE = `{{FrontSide}}
 <hr id="answer">
 
 <div class="translations-section">
-  {{{TranslationsHTML}}}
+  {{TranslationsHTML}}
 </div>
 
 {{#LeastCommonHTML}}
 <div class="least-common-section">
   <div class="least-common-header">Less Common</div>
   <div class="least-common-list">
-    {{{LeastCommonHTML}}}
+    {{LeastCommonHTML}}
   </div>
 </div>
 {{/LeastCommonHTML}}
@@ -185,7 +185,26 @@ const BACK_TEMPLATE = `{{FrontSide}}
 async function ensureNoteType() {
   try {
     const models = await ankiInvoke('modelNames');
-    if (models.includes(NOTE_TYPE_NAME)) return;
+    if (models.includes(NOTE_TYPE_NAME)) {
+      await ankiInvoke('updateModelTemplates', {
+        model: {
+          name: NOTE_TYPE_NAME,
+          templates: {
+            Recognition: {
+              Front: FRONT_TEMPLATE,
+              Back: BACK_TEMPLATE
+            }
+          }
+        }
+      });
+      await ankiInvoke('updateModelStyling', {
+        model: {
+          name: NOTE_TYPE_NAME,
+          css: NOTE_TYPE_CSS
+        }
+      });
+      return;
+    }
   } catch {
     throw new Error('Cannot check model names - AnkiConnect may not be reachable');
   }
