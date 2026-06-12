@@ -2,14 +2,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const statusDot = document.getElementById('status-dot');
   const statusText = document.getElementById('status-text');
   const mainContent = document.getElementById('main-content');
-  const profileSelect = document.getElementById('profile-select');
-  const deckSection = document.getElementById('deck-section');
   const deckSelect = document.getElementById('deck-select');
   const btnShowCreate = document.getElementById('btn-show-create');
   const cardsAdded = document.getElementById('cards-added');
   const queueCount = document.getElementById('queue-count');
   const createDeckForm = document.getElementById('create-deck-form');
   const newDeckName = document.getElementById('new-deck-name');
+  const feedbackEl = document.getElementById('popup-feedback');
+  const ankiUrlInput = document.getElementById('anki-url');
+
+  function showFeedback(message, type) {
+    feedbackEl.textContent = message;
+    feedbackEl.className = 'popup-feedback popup-feedback-' + type;
+    feedbackEl.classList.remove('hidden');
+    clearTimeout(feedbackEl._timer);
+    feedbackEl._timer = setTimeout(() => {
+      feedbackEl.classList.add('hidden');
+    }, 4000);
+  }
 
   async function updateStatus() {
     try {
@@ -33,56 +43,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  async function loadProfiles() {
-    profileSelect.disabled = true;
-    profileSelect.innerHTML = '<option value="">Loading profiles...</option>';
-    try {
-      const response = await chrome.runtime.sendMessage({ action: 'GET_PROFILES' });
-      if (!response.connected) {
-        profileSelect.innerHTML = '<option value="">Not connected</option>';
-        return;
-      }
-      const { selectedProfile } = await chrome.storage.local.get('selectedProfile');
-      profileSelect.innerHTML = '<option value="">-- Select profile --</option>';
-      response.profiles.forEach(p => {
-        const option = document.createElement('option');
-        option.value = p;
-        option.textContent = p;
-        if (p === response.activeProfile && !selectedProfile) option.selected = true;
-        if (p === selectedProfile) option.selected = true;
-        profileSelect.appendChild(option);
-      });
-      profileSelect.disabled = false;
-
-      const { selectedProfile: saved } = await chrome.storage.local.get('selectedProfile');
-      if (saved && response.profiles.includes(saved)) {
-        await loadDecks();
-      } else if (response.activeProfile) {
-        await chrome.storage.local.set({ selectedProfile: response.activeProfile });
-        profileSelect.value = response.activeProfile;
-        await loadDecks();
-      } else {
-        disableDeckSection();
-      }
-    } catch {
-      profileSelect.innerHTML = '<option value="">Error loading</option>';
-      disableDeckSection();
-    }
-  }
-
-  function enableDeckSection() {
+  async function loadDecks() {
     deckSelect.disabled = false;
     btnShowCreate.disabled = false;
-  }
-
-  function disableDeckSection() {
-    deckSelect.disabled = true;
-    deckSelect.innerHTML = '<option value="">Select profile first</option>';
-    btnShowCreate.disabled = true;
-  }
-
-  async function loadDecks() {
-    enableDeckSection();
     try {
       const response = await chrome.runtime.sendMessage({ action: 'GET_DECKS' });
       const { selectedDeck } = await chrome.storage.local.get('selectedDeck');
@@ -109,21 +72,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     queueCount.textContent = String(offlineQueue.length);
   }
 
-  await updateStatus();
-  await loadProfiles();
-  await updateStats();
-
-  profileSelect.addEventListener('change', async () => {
-    const profileName = profileSelect.value;
-    if (!profileName) {
-      await chrome.storage.local.remove('selectedProfile');
-      await chrome.storage.local.remove('selectedDeck');
-      disableDeckSection();
-      return;
+  async function loadAnkiUrl() {
+    try {
+      const response = await chrome.runtime.sendMessage({ action: 'GET_ANKI_URL' });
+      ankiUrlInput.value = response.url || response.defaultUrl;
+    } catch {
+      ankiUrlInput.value = 'http://localhost:8765';
     }
-    await chrome.storage.local.set({ selectedProfile: profileName });
-    await loadDecks();
-  });
+  }
+
+  await updateStatus();
+  await loadDecks();
+  await updateStats();
+  await loadAnkiUrl();
 
   deckSelect.addEventListener('change', async () => {
     await chrome.storage.local.set({ selectedDeck: deckSelect.value });
@@ -131,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('btn-check-connection').addEventListener('click', async () => {
     await updateStatus();
-    await loadProfiles();
+    await loadDecks();
     await updateStats();
   });
 
@@ -165,10 +126,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         createDeckForm.classList.add('hidden');
         newDeckName.value = '';
       } else {
-        alert(response.message || 'Failed to create deck');
+        showFeedback(response.message || 'Failed to create deck', 'error');
       }
     } catch (e) {
-      alert('Error: ' + e.message);
+      showFeedback('Error: ' + e.message, 'error');
     }
   });
 
@@ -176,13 +137,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const response = await chrome.runtime.sendMessage({ action: 'PROCESS_QUEUE' });
       if (response.remaining === -1) {
-        alert(response.error || 'Cannot process queue - check Anki connection');
+        showFeedback(response.error || 'Cannot process queue - check Anki connection', 'error');
       } else {
-        alert(`Processed ${response.processed} cards. ${response.remaining} remaining.`);
+        showFeedback(`Processed ${response.processed} cards. ${response.remaining} remaining.`, 'success');
       }
       await updateStats();
     } catch (e) {
-      alert('Error: ' + e.message);
+      showFeedback('Error: ' + e.message, 'error');
+    }
+  });
+
+  document.getElementById('btn-save-url').addEventListener('click', async () => {
+    const url = ankiUrlInput.value.trim();
+    if (!url) {
+      showFeedback('URL cannot be empty', 'error');
+      return;
+    }
+    try {
+      const response = await chrome.runtime.sendMessage({ action: 'SET_ANKI_URL', url });
+      if (response.success) {
+        showFeedback('AnkiConnect URL saved', 'success');
+        await updateStatus();
+      } else {
+        showFeedback('Failed to save URL', 'error');
+      }
+    } catch (e) {
+      showFeedback('Error: ' + e.message, 'error');
+    }
+  });
+
+  document.getElementById('btn-reset-url').addEventListener('click', async () => {
+    try {
+      await chrome.storage.local.remove('ankiUrl');
+      ankiUrlInput.value = 'http://localhost:8765';
+      showFeedback('AnkiConnect URL reset to default', 'success');
+      await updateStatus();
+    } catch (e) {
+      showFeedback('Error: ' + e.message, 'error');
     }
   });
 });

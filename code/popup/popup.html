@@ -15,17 +15,22 @@
     </header>
 
     <div id="main-content" class="hidden">
-      <section class="section">
-        <h2>Profile</h2>
-        <select id="profile-select" disabled>
-          <option value="">Loading profiles...</option>
-        </select>
-      </section>
+      <details class="advanced-settings">
+        <summary>Advanced</summary>
+        <section class="section">
+          <h2>AnkiConnect URL</h2>
+          <input type="url" id="anki-url" placeholder="http://localhost:8765">
+          <div class="url-actions">
+            <button id="btn-save-url" class="btn btn-primary btn-small">Save</button>
+            <button id="btn-reset-url" class="btn btn-small">Reset to Default</button>
+          </div>
+        </section>
+      </details>
 
       <section class="section" id="deck-section">
         <h2>Deck</h2>
         <select id="deck-select" disabled>
-          <option value="">Select profile first</option>
+          <option value="">Loading decks...</option>
         </select>
         <div class="deck-actions">
           <button id="btn-show-create" class="btn btn-small" disabled>Create Deck</button>
@@ -42,7 +47,7 @@
       <section class="section stats">
         <h2>Stats</h2>
         <div class="stat-row">
-          <span class="stat-label">Added this session</span>
+          <span class="stat-label">Cards added</span>
           <span class="stat-value" id="cards-added">0</span>
         </div>
         <div class="stat-row">
@@ -57,7 +62,7 @@
       <ol>
         <li>Open <strong>Anki Desktop</strong></li>
         <li>Install <strong>AnkiConnect</strong> (code: <code>2055492159</code>)</li>
-        <li>Select your <strong>profile</strong> and <strong>deck</strong> above</li>
+        <li>Select a <strong>deck</strong> above</li>
       </ol>
     </section>
 
@@ -66,8 +71,10 @@
       <button id="btn-check-connection" class="btn btn-secondary">Refresh</button>
     </div>
 
+    <div id="popup-feedback" class="popup-feedback hidden"></div>
+
     <footer class="popup-footer">
-      v1.0.0 &middot; <a href="https://ankiweb.net/shared/info/2055492159" target="_blank">AnkiConnect</a>
+      v0.1.0 &middot; <a href="https://ankiweb.net/shared/info/2055492159" target="_blank">AnkiConnect</a>
     </footer>
   </div>
 

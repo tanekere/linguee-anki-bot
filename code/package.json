@@ -1,6 +1,6 @@
 {
   "name": "linguee-anki-bot",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Browser extension to extract vocabulary from Linguee and add to Anki",
   "scripts": {

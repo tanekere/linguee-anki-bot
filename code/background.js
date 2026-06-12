@@ -1,8 +1,14 @@
-const ANKI_URL = 'http://localhost:8765';
+const DEFAULT_ANKI_URL = 'http://localhost:8765';
 const NOTE_TYPE_NAME = 'Linguee German Vocabulary';
 
+async function getAnkiUrl() {
+  const { ankiUrl } = await chrome.storage.local.get('ankiUrl');
+  return ankiUrl || DEFAULT_ANKI_URL;
+}
+
 async function ankiInvoke(action, params = {}) {
-  const response = await fetch(ANKI_URL, {
+  const url = await getAnkiUrl();
+  const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action, version: 6, params })
@@ -28,14 +34,6 @@ async function getActiveProfile() {
     return await ankiInvoke('getActiveProfile');
   } catch {
     return null;
-  }
-}
-
-async function getProfilesList() {
-  try {
-    return await ankiInvoke('getProfiles');
-  } catch {
-    return [];
   }
 }
 
@@ -385,6 +383,7 @@ async function processOfflineQueue() {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
+    try {
     switch (message.action) {
       case 'ADD_TO_ANKI': {
         const { entry } = message;
@@ -438,16 +437,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       case 'GET_STATUS': {
         const connected = await checkAnkiConnect();
         if (!connected) {
-          sendResponse({ connected: false, profile: null, profiles: [], deck: null });
+          sendResponse({ connected: false, profile: null, deck: null });
           return;
         }
         try {
           const activeProfile = await ankiInvoke('getActiveProfile');
-          const profiles = await ankiInvoke('getProfiles');
           const { selectedDeck } = await chrome.storage.local.get('selectedDeck');
-          sendResponse({ connected: true, profile: activeProfile, profiles, deck: selectedDeck || null });
+          sendResponse({ connected: true, profile: activeProfile, deck: selectedDeck || null });
         } catch {
-          sendResponse({ connected: false, profile: null, profiles: [], deck: null });
+          sendResponse({ connected: false, profile: null, deck: null });
         }
         break;
       }
@@ -469,38 +467,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       case 'SET_DECK': {
         await chrome.storage.local.set({ selectedDeck: message.deckName });
-        chrome.tabs.query({ url: 'https://www.linguee.com/*' }, (tabs) => {
+        try {
+          const tabs = await chrome.tabs.query({ url: 'https://www.linguee.com/*' });
           for (const tab of tabs) {
             chrome.tabs.sendMessage(tab.id, { action: 'DECK_CHANGED' }).catch(() => {});
           }
-        });
+        } catch {}
         sendResponse({ success: true });
-        break;
-      }
-
-      case 'GET_PROFILES': {
-        const connected = await checkAnkiConnect();
-        if (!connected) {
-          sendResponse({ connected: false, profiles: [], activeProfile: null });
-          return;
-        }
-        try {
-          const profiles = await ankiInvoke('getProfiles');
-          const activeProfile = await ankiInvoke('getActiveProfile');
-          sendResponse({ connected: true, profiles, activeProfile });
-        } catch {
-          sendResponse({ connected: false, profiles: [], activeProfile: null });
-        }
-        break;
-      }
-
-      case 'LOAD_PROFILE': {
-        try {
-          await ankiInvoke('loadProfile', { name: message.name });
-          sendResponse({ success: true });
-        } catch (e) {
-          sendResponse({ success: false, error: e.message });
-        }
         break;
       }
 
@@ -535,8 +508,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
       }
 
+      case 'GET_ANKI_URL': {
+        const url = await getAnkiUrl();
+        sendResponse({ url, defaultUrl: DEFAULT_ANKI_URL });
+        break;
+      }
+
+      case 'SET_ANKI_URL': {
+        const newUrl = message.url?.trim();
+        if (newUrl) {
+          await chrome.storage.local.set({ ankiUrl: newUrl });
+          sendResponse({ success: true, url: newUrl });
+        } else {
+          await chrome.storage.local.remove('ankiUrl');
+          sendResponse({ success: true, url: DEFAULT_ANKI_URL });
+        }
+        break;
+      }
+
       default:
         sendResponse({ success: false, error: 'unknown_action' });
+    }
+    } catch (e) {
+      sendResponse({ success: false, error: e.message || 'Unexpected error' });
     }
   })();
   return true;

@@ -346,7 +346,23 @@ function init() {
     if (hasValid) {
       injectForAll(null, entries);
       checkAnkiStatus();
-      setInterval(checkAnkiStatus, 15000);
+      let pollTimer = null;
+      function schedulePoll() {
+        clearTimeout(pollTimer);
+        pollTimer = setTimeout(() => {
+          checkAnkiStatus();
+          schedulePoll();
+        }, 15000);
+      }
+      schedulePoll();
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          checkAnkiStatus();
+          schedulePoll();
+        } else {
+          clearTimeout(pollTimer);
+        }
+      });
     }
   }
 }
