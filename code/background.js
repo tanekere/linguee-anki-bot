@@ -111,9 +111,9 @@ hr#answer { border: none; border-top: 2px solid #e9ecef; margin: 16px 0; }
 .trans-word { font-size: 20px; font-weight: 600; color: #1d3557; }
 .trans-pos { font-size: 14px; color: #6c757d; font-style: italic; }
 .trans-forms { font-size: 13px; color: #868e96; }
-.trans-freq {
-  font-size: 12px; color: #27ae60; font-weight: 500;
-  background: #e8f8f0; padding: 1px 6px; border-radius: 8px;
+.trans-context {
+  font-size: 12px; color: #6c5ce7; font-weight: 500;
+  background: #f0edff; padding: 1px 6px; border-radius: 8px;
 }
 .trans-examples { margin-top: 4px; margin-left: 16px; }
 .example-pair { margin-bottom: 6px; padding: 6px 10px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #457b9d; }
@@ -128,6 +128,7 @@ hr#answer { border: none; border-top: 2px solid #e9ecef; margin: 16px 0; }
 .lc-item { white-space: nowrap; }
 .lc-word { color: #555; font-weight: 500; }
 .lc-pos { font-size: 12px; font-style: italic; color: #adb5bd; margin-left: 2px; }
+.lc-context { font-size: 11px; color: #6c5ce7; margin-left: 2px; }
 .lc-separator { margin: 0 6px; color: #ccc; }
 .source { margin-top: 14px; font-size: 11px; color: #adb5bd; text-align: right; }
 .nightMode .card { background-color: #1e1e2e; color: #cdd6f4; }
@@ -136,6 +137,7 @@ hr#answer { border: none; border-top: 2px solid #e9ecef; margin: 16px 0; }
 .nightMode .trans-word { color: #cdd6f4; }
 .nightMode .trans-pos { color: #9399b2; }
 .nightMode .trans-forms { color: #585b70; }
+.nightMode .trans-context { color: #b4a0ff; background-color: #313244; }
 .nightMode .example-pair { background-color: #313244; border-left-color: #89b4fa; }
 .nightMode .example-source { color: #cdd6f4; }
 .nightMode .example-target { color: #9399b2; }
@@ -145,6 +147,7 @@ hr#answer { border: none; border-top: 2px solid #e9ecef; margin: 16px 0; }
 .nightMode .least-common-header { color: #6c7086; }
 .nightMode .least-common-list { color: #6c7086; }
 .nightMode .lc-word { color: #9399b2; }
+.nightMode .lc-context { color: #b4a0ff; }
 .nightMode .source { color: #585b70; }
 .nightMode .gender-masculine { background-color: #1e66f5; }
 .nightMode .gender-feminine  { background-color: #d20f39; }
@@ -272,8 +275,8 @@ function formatTranslationsHTML(translations) {
       if (t.verbForms && t.verbForms.length > 0) {
         html += `<span class="trans-forms">(${escapeHTML(t.verbForms.join(', '))})</span>`;
       }
-      if (t.isOftenUsed) {
-        html += '<span class="trans-freq">often used</span>';
+      if (t.usageNote) {
+        html += `<span class="trans-context">${escapeHTML(t.usageNote)}</span>`;
       }
       html += '</div>';
       if (t.examples && t.examples.length > 0) {
@@ -301,6 +304,9 @@ function formatLeastCommonHTML(translations) {
       html += `<span class="lc-word">${escapeHTML(t.text)}</span>`;
       if (t.pos) {
         html += `<span class="lc-pos">${escapeHTML(t.pos)}</span>`;
+      }
+      if (t.usageNote) {
+        html += `<span class="lc-context">${escapeHTML(t.usageNote)}</span>`;
       }
       html += '</span>';
       if (i < leastCommon.length - 1) {

@@ -23,13 +23,16 @@ function extractTranslation(transEl) {
   const dictLink = transEl.querySelector('.dictLink');
   const tagTypeEl = transEl.querySelector('.tag_type');
   const tagCEl = transEl.querySelector('.tag_c');
+  const tagAreaEl = transEl.querySelector('.tag_area');
 
   const text = normalizeText(dictLink?.textContent || '');
   if (!text) return null;
 
   const pos = normalizeText(tagTypeEl?.textContent || tagTypeEl?.getAttribute('title') || '');
   let usageNote = '';
-  if (tagCEl) {
+  if (tagAreaEl) {
+    usageNote = normalizeText(tagAreaEl.textContent);
+  } else if (tagCEl) {
     usageNote = normalizeText(tagCEl.textContent);
   }
   const isOftenUsed = tagCEl?.classList.contains('usedveryoften') || false;
@@ -57,13 +60,21 @@ function extractInexactTranslations(groupEl) {
   for (const transDiv of transDivs) {
     const dictLink = transDiv.querySelector('.dictLink');
     const tagTypeEl = transDiv.querySelector('.tag_type');
+    const tagAreaEl = transDiv.querySelector('.tag_area');
+    const tagCEl = transDiv.querySelector('.tag_c');
     const text = normalizeText(dictLink?.textContent || '');
     if (!text) continue;
+    let usageNote = '';
+    if (tagAreaEl) {
+      usageNote = normalizeText(tagAreaEl.textContent);
+    } else if (tagCEl) {
+      usageNote = normalizeText(tagCEl.textContent);
+    }
     translations.push({
       text,
       pos: normalizeText(tagTypeEl?.textContent || tagTypeEl?.getAttribute('title') || ''),
-      usageNote: '',
-      isOftenUsed: false,
+      usageNote,
+      isOftenUsed: tagCEl?.classList.contains('usedveryoften') || false,
       isCommon: false,
       examples: []
     });
