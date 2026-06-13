@@ -1,0 +1,28 @@
+I am trying to make a browser extention to automatically add words found on Linguee into an Anki deck.
+I want to card to have the word, weather it's a noun, verb, etc.; it's gender(when applicable); all translations, with the most common listed first and least common ones listed later with the title "least common"; the examples for each translation. You and all the subagents shoudl use Chrome Devtools MCP to do all the browsing required for these tasks.
+Create subagents to dot the following. Each will have their own agent-<agent_name>.md file in .opencode/agents
+
+1. The Linguee part
+Use browser to research the structure of the structure of the website and determine what is the best stategy to do this. Use Chrome Devtools MCP. Figure out if it will it be enough to write code that can get the data or is it wiser to use LLMs everytime to get the world. Once the exact method for getting the words is determined, research ways to build it. If this route is chosen, keep in mind that there needs to be a desktop app to do this LLM calling. Python is the preferred language for this.
+
+Create markdown files with research done in /linguee. If this folder does not exist, create it.
+
+2. Alternative methods
+Check out Wiktionary and Globse. Check if the same kind of information should be availible. Use web search for this as well. Compare the results for each and determine if they are viable. Figure out ways to scrape the same informtaion using any python-based tools.
+
+Create markdown files with research done in /anki. If this folder does not exist, create it.
+
+3. Anki Part
+Write the acquired data into Anki as cards. There are already browser extensions written that can do this. Research them using web search/browsing. Then determine how to make the cards look like the image provided using html tags. Finally, determine how to write the cards into a user-specified deck
+
+Create markdown files with research done in /Anki. If this folder does not exist, create it.
+
+
+
+/init an agent that used Pro to create a JS browser extention to add the words displayed in Linguee to an anki deck. FOR THE PURPOSE OF DEVELLOPMENT, ONLY USE THE "testing" PROFILE. DO NOT UNDER ANY CIRCUMSTANCES ENTER ANY OTHER PROFILE. The agent must use the chrome-devtools mcp sever whenever necessary. The should also call on the skills chrome-development and anki-connect whenever appropriate
+
+Create a detailed plan to create a browser extesnion to add the words displayed in Linguee to an anki deck. Include safuguads to not access any deck not in the "testing" profile as a part of the plan. Read up all the .md files in this directory to gain knowledge on the problem. Use the chrome-development and anki-connect skills for aiding you in developing this plan. Then use chrome-devtools mcp sever to gather the structure of the definitions, additional information if necessary. Remember i need the translaitons, the gramatical information and the examples in the same order as it is presented. The extension should inject a button next to the word using DOM manupulation to add the word to the selected deck. When the extention button on the top bar is is cliked on, it opend a menu to allow the user to choose which deck the to the curretly selected deck, that for the sake fo this app, is hardcoded to only allow for addition to a profile named "testing". The cards must use a format identical to how the words are displayed on Linguee. Use the chrome-devtools MCP sever extensively for both development and for determing the format of the cards. Finally,  save the final plan in a new folder called final_plan in how many every .md files necessary.
+
+Use the linguee-anki-test deck as the default deck. The extension should inject a button next to the word using DOM manupulation to add the word to the selected deck. When the extention button on the taskbar is is cliked on, it opend a menu to allow the user to choose which deck the to the curretly selected deck, that for the sake fo this app, is hardcoded to only allow for addition to a profile named "testing". The cards must use a format identical to how the words are displayed on Linguee. Use the chrome-devtools MCP sever extensively for both development and for determing the format of the cards.
+
+
