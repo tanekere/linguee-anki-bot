@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+*.zip
+
+# Local environment files
+.env
+.env.*
+
+# Logs
+*.log

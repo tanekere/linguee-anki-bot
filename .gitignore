@@ -22,3 +22,9 @@ Thumbs.db
 
 # AI input
 images-to-see/
+
+# Agent/runtime metadata
+.agents/
+.opencode/
+AGENTS.md
+opencode.json
