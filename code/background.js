@@ -202,7 +202,7 @@ async function ensureNoteType() {
 async function ensureDeck(deckName) {
   const decks = await ankiInvoke('deckNames');
   if (!decks.includes(deckName)) {
-    await ankiInvoke('createDeck', { deck: deckName });
+    throw new Error(`Deck "${deckName}" does not exist. Create it in the popup first.`);
   }
 }
 
@@ -292,7 +292,15 @@ function formatLeastCommonHTML(translations) {
 
 async function addEntryToAnki(entry, deckName) {
   await ensureNoteType();
-  await ensureDeck(deckName);
+  try{
+    await ensureDeck(deckName);
+  }catch{
+    return {
+      success: false,
+      error: 'deck_not_found',
+      message: 'No deck selected'
+    };
+  }
 
   const allTranslations = [
     ...(entry.commonTranslations || []),
@@ -367,7 +375,7 @@ async function processOfflineQueue() {
 
   for (const item of offlineQueue) {
     const result = await addEntryToAnki(item.entry, item.deckName);
-    if (result.success || result.error === 'duplicate') {
+    if (result.success || result.error === 'duplicate' || result.error === 'deck_not_found') {
       processed++;
     } else {
       item.attempts++;
@@ -412,8 +420,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse(result);
           }
         } catch (e) {
-          await queueForLater(entry, selectedDeck);
-          sendResponse({ success: false, queued: true });
+          if (e.message && e.message.includes('does not exist')) {
+            sendResponse({ success: false, error: 'deck_not_found', message: e.message });
+          } else {
+            await queueForLater(entry, selectedDeck);
+            sendResponse({ success: false, queued: true });
+          }
         }
         break;
       }

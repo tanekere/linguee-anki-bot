@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const sharp = require('sharp');
 
 const ROOT = __dirname;
 const DIST = path.join(ROOT, 'dist');
@@ -102,8 +103,41 @@ function buildTarget(name) {
   }
 }
 
+const ICON_SIZES = [
+  { name: 'icon-16.png', size: 16 },
+  { name: 'icon-48.png', size: 48 },
+  { name: 'icon-128.png', size: 128 }
+];
+
+const ICON_SRC = path.join(ROOT, 'icons', 'icon-og.png');
+const ICON_DIR = path.join(ROOT, 'icons');
+
+async function generateIcons() {
+  if (!fs.existsSync(ICON_SRC)) {
+    console.error(`  ✗ source icon not found: ${ICON_SRC}`);
+    process.exit(1);
+  }
+
+  for (const { name, size } of ICON_SIZES) {
+    const dest = path.join(ICON_DIR, name);
+    await sharp(ICON_SRC).resize(size, size).toFile(dest);
+    console.log(`  ✓ ${name} (${size}x${size})`);
+  }
+
+  console.log('\nIcons generated successfully.');
+}
+
 function main() {
   const arg = process.argv[2];
+
+  if (arg === '--icons') {
+    console.log('Generating icons...\n');
+    generateIcons().catch(err => {
+      console.error('  ✗', err.message);
+      process.exit(1);
+    });
+    return;
+  }
 
   if (arg && TARGETS[arg]) {
     buildTarget(arg);

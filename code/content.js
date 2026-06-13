@@ -275,6 +275,14 @@ document.addEventListener('click', async (e) => {
       btn.textContent = 'Error';
       btn.title = response.message;
       showToast(response.message, 'error');
+    } else if (response.error === 'deck_not_found') {
+      btn.classList.remove('adding');
+      btn.classList.add('error');
+      btn.textContent = 'Error';
+      btn.title = response.message || 'Deck not found';
+      showToast(response.message || 'Deck not found', 'error');
+      ankiStatus.deck = null;
+      updateButtonStates();
     } else if (response.queued) {
       btn.classList.remove('adding');
       btn.classList.add('queued');
